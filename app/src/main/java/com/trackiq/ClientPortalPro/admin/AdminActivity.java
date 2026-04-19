@@ -72,7 +72,6 @@ public class AdminActivity extends AppCompatActivity {
                     binding.btnUpdateRecord.setText("Publish Update");
                     Toast.makeText(AdminActivity.this, "Record successfully updated!", Toast.LENGTH_LONG).show();
                     
-                    // Clear fields after success
                     binding.etTargetUid.setText("");
                     binding.etProjectName.setText("");
                     binding.etPhase.setText("");
