@@ -38,5 +38,9 @@
             android:name=".admin.AdminActivity"
             android:exported="false" />
             
+        <activity
+            android:name=".auth.ForgotPasswordActivity"
+            android:exported="false" />
+            
     </application>
 </manifest>
