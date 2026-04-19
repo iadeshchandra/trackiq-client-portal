@@ -11,7 +11,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.trackiq.ClientPortalPro.dashboard.DashboardActivity; 
+import com.trackiq.ClientPortalPro.admin.AdminActivity;
+import com.trackiq.ClientPortalPro.dashboard.DashboardActivity;
 import com.trackiq.ClientPortalPro.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {
@@ -19,6 +20,9 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private ActivityLoginBinding binding;
     private FirebaseAuth mAuth;
+    
+    // Set your sovereign admin email here
+    private static final String ADMIN_EMAIL = "admin@sanatanibandhan.com"; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +41,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onStart();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null){
-            navigateToDashboard();
+            routeUser(currentUser.getEmail());
         }
     }
 
@@ -62,13 +66,27 @@ public class LoginActivity extends AppCompatActivity {
                     setLoadingState(false);
                     if (task.isSuccessful()) {
                         Log.d(TAG, "signInWithEmail:success");
-                        navigateToDashboard();
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        routeUser(user != null ? user.getEmail() : "");
                     } else {
                         Log.w(TAG, "signInWithEmail:failure", task.getException());
                         Toast.makeText(LoginActivity.this, "Authentication failed. Check your credentials.",
                                 Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void routeUser(String email) {
+        Intent intent;
+        if (email != null && email.equalsIgnoreCase(ADMIN_EMAIL)) {
+            // Route the leader to the control center
+            intent = new Intent(LoginActivity.this, AdminActivity.class);
+        } else {
+            // Route general users to their dashboard
+            intent = new Intent(LoginActivity.this, DashboardActivity.class);
+        }
+        startActivity(intent);
+        finish(); 
     }
 
     private void setLoadingState(boolean isLoading) {
@@ -83,11 +101,5 @@ public class LoginActivity extends AppCompatActivity {
             binding.etEmail.setEnabled(true);
             binding.etPassword.setEnabled(true);
         }
-    }
-
-    private void navigateToDashboard() {
-        Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
-        startActivity(intent);
-        finish(); 
     }
 }
