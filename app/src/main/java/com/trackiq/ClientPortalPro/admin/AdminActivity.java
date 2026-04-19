@@ -13,14 +13,17 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.trackiq.ClientPortalPro.auth.LoginActivity;
 import com.trackiq.ClientPortalPro.databinding.ActivityAdminBinding;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -33,7 +36,7 @@ public class AdminActivity extends AppCompatActivity {
     
     private Uri selectedPdfUri = null;
 
-    // The modern, non-deprecated way to select files in Android
+    // Modern file picker for PDFs
     private final ActivityResultLauncher<Intent> filePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -56,13 +59,14 @@ public class AdminActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         storageRef = FirebaseStorage.getInstance().getReference();
 
-        // Status Update Setup
-        binding.btnUpdateRecord.setOnClickListener(v -> pushUpdateToDatabase());
+        // Timeline Update Listener
+        binding.btnUpdateRecord.setOnClickListener(v -> pushTimelineUpdate());
         
-        // File Upload Setup
+        // Document Upload Listeners
         binding.btnSelectFile.setOnClickListener(v -> openFilePicker());
         binding.btnUploadFile.setOnClickListener(v -> uploadDocumentToFirebase());
 
+        // Sovereign Sign Out
         binding.btnAdminLogout.setOnClickListener(v -> {
             mAuth.signOut();
             startActivity(new Intent(AdminActivity.this, LoginActivity.class));
@@ -70,114 +74,114 @@ public class AdminActivity extends AppCompatActivity {
         });
     }
 
-    private void pushUpdateToDatabase() {
+    /**
+     * PHASE 8 LOGIC: Converts comma-separated text into a Dynamic Timeline
+     */
+    private void pushTimelineUpdate() {
         String uid = binding.etTargetUid.getText().toString().trim();
         String projectName = binding.etProjectName.getText().toString().trim();
-        String phase = binding.etPhase.getText().toString().trim();
-        String progressStr = binding.etProgress.getText().toString().trim();
+        String milestoneRaw = binding.etMilestoneList.getText().toString().trim();
+        String stepStr = binding.etCurrentStep.getText().toString().trim();
 
-        if (TextUtils.isEmpty(uid) || TextUtils.isEmpty(projectName) || TextUtils.isEmpty(phase) || TextUtils.isEmpty(progressStr)) {
-            Toast.makeText(this, "Please fill all status fields.", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(uid) || TextUtils.isEmpty(projectName) || TextUtils.isEmpty(milestoneRaw) || TextUtils.isEmpty(stepStr)) {
+            Toast.makeText(this, "Please fill all timeline fields.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        int progress = Integer.parseInt(progressStr);
-        if (progress < 0 || progress > 100) {
-            binding.etProgress.setError("Must be between 0 and 100");
-            return;
+        // Convert raw string to List of Milestones
+        String[] stepsArray = milestoneRaw.split(",");
+        List<String> stepsList = new ArrayList<>();
+        for (String s : stepsArray) {
+            if (!s.trim().isEmpty()) {
+                stepsList.add(s.trim());
+            }
         }
+
+        int currentStep = Integer.parseInt(stepStr);
 
         binding.btnUpdateRecord.setEnabled(false);
-        binding.btnUpdateRecord.setText("Updating...");
+        binding.btnUpdateRecord.setText("Publishing...");
 
         Map<String, Object> projectData = new HashMap<>();
         projectData.put("projectName", projectName);
-        projectData.put("currentPhase", phase);
-        projectData.put("progressPercentage", progress);
+        projectData.put("milestones", stepsList);
+        projectData.put("currentStepIndex", currentStep);
 
         db.collection("projects").document(uid)
-                .set(projectData)
+                .set(projectData, SetOptions.merge())
                 .addOnSuccessListener(aVoid -> {
                     binding.btnUpdateRecord.setEnabled(true);
-                    binding.btnUpdateRecord.setText("Publish Update");
-                    Toast.makeText(AdminActivity.this, "Status successfully updated!", Toast.LENGTH_LONG).show();
+                    binding.btnUpdateRecord.setText("Publish Timeline");
+                    Toast.makeText(this, "Client Timeline Updated!", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     binding.btnUpdateRecord.setEnabled(true);
-                    binding.btnUpdateRecord.setText("Publish Update");
-                    Toast.makeText(AdminActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    binding.btnUpdateRecord.setText("Publish Timeline");
+                    Toast.makeText(this, "Firestore Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
+    /**
+     * PHASE 6 LOGIC: Secure PDF Management
+     */
     private void openFilePicker() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("application/pdf");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        filePickerLauncher.launch(Intent.createChooser(intent, "Select PDF"));
+        filePickerLauncher.launch(Intent.createChooser(intent, "Select Project PDF"));
     }
 
     private void uploadDocumentToFirebase() {
         String targetUid = binding.etDocTargetUid.getText().toString().trim();
         String docTitle = binding.etDocTitle.getText().toString().trim();
 
-        if (TextUtils.isEmpty(targetUid) || TextUtils.isEmpty(docTitle)) {
-            Toast.makeText(this, "UID and Document Title are required.", Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(targetUid) || TextUtils.isEmpty(docTitle) || selectedPdfUri == null) {
+            Toast.makeText(this, "Target UID, Title, and File are required.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (selectedPdfUri == null) {
-            Toast.makeText(this, "Please select a PDF file first.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Lock UI during upload
         binding.btnUploadFile.setEnabled(false);
         binding.uploadProgressBar.setVisibility(View.VISIBLE);
-        binding.uploadProgressBar.setIndeterminate(true);
 
-        // Create a unique filename in Firebase Storage: clients/{uid}/{timestamp}.pdf
+        // Path: clients/{uid}/{timestamp}.pdf
         String fileName = System.currentTimeMillis() + ".pdf";
         StorageReference fileRef = storageRef.child("clients/" + targetUid + "/" + fileName);
 
         fileRef.putFile(selectedPdfUri)
                 .addOnSuccessListener(taskSnapshot -> {
-                    // File uploaded successfully, now get the download URL
                     fileRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        String downloadUrl = uri.toString();
-                        saveDocumentMetadataToFirestore(targetUid, docTitle, downloadUrl);
+                        saveDocumentMetadata(targetUid, docTitle, uri.toString());
                     });
                 })
                 .addOnFailureListener(e -> {
                     resetUploadUI();
-                    Toast.makeText(AdminActivity.this, "Upload failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Storage Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                 });
     }
 
-    private void saveDocumentMetadataToFirestore(String uid, String title, String fileUrl) {
-        // Generate current date string
-        String currentDate = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
+    private void saveDocumentMetadata(String uid, String title, String url) {
+        String date = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(new Date());
 
-        Map<String, Object> docData = new HashMap<>();
-        docData.put("title", title);
-        docData.put("date", currentDate);
-        docData.put("url", fileUrl);
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("title", title);
+        doc.put("date", date);
+        doc.put("url", url);
 
         db.collection("projects").document(uid).collection("documents")
-                .add(docData)
-                .addOnSuccessListener(documentReference -> {
+                .add(doc)
+                .addOnSuccessListener(ref -> {
                     resetUploadUI();
-                    Toast.makeText(AdminActivity.this, "Document pushed to client successfully!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "PDF Pushed to Client!", Toast.LENGTH_SHORT).show();
                     
-                    // Clear inputs
+                    // Cleanup upload fields
                     binding.etDocTargetUid.setText("");
                     binding.etDocTitle.setText("");
                     selectedPdfUri = null;
                     binding.tvSelectedFileName.setText("No file selected");
-                    binding.tvSelectedFileName.setTextColor(getResources().getColor(android.R.color.darker_gray, null));
                 })
                 .addOnFailureListener(e -> {
                     resetUploadUI();
-                    Toast.makeText(AdminActivity.this, "Error linking document: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Linking Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
