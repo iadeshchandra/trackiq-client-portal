@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -17,22 +18,32 @@ import com.trackiq.ClientPortalPro.auth.LoginActivity;
 import com.trackiq.ClientPortalPro.databinding.ActivityDashboardBinding;
 import com.trackiq.ClientPortalPro.invoices.DocumentsActivity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DashboardActivity extends AppCompatActivity {
 
     private static final String TAG = "DashboardActivity";
     private ActivityDashboardBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private MilestoneAdapter milestoneAdapter;
+    private List<Milestone> milestoneList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
         binding = ActivityDashboardBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
+
+        // Initialize Timeline RecyclerView
+        milestoneList = new ArrayList<>();
+        milestoneAdapter = new MilestoneAdapter(this, milestoneList);
+        binding.rvTimeline.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvTimeline.setAdapter(milestoneAdapter);
 
         setupClickListeners();
         loadClientData();
@@ -68,27 +79,31 @@ public class DashboardActivity extends AppCompatActivity {
             if (task.isSuccessful()) {
                 DocumentSnapshot document = task.getResult();
                 if (document.exists()) {
-                    Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                    
                     String projectName = document.getString("projectName");
-                    String currentPhase = document.getString("currentPhase");
-                    Long progressLong = document.getLong("progressPercentage");
-                    
-                    int progress = progressLong != null ? progressLong.intValue() : 0;
-                    
-                    binding.tvProjectName.setText(projectName != null ? projectName : "Unnamed Project");
-                    binding.tvProjectPhase.setText(currentPhase != null ? currentPhase : "Planning");
-                    binding.projectProgressBar.setProgress(progress);
-                    
+                    binding.tvProjectName.setText(projectName != null ? projectName : "Active Project");
+
+                    // Logic for Dynamic Timeline
+                    List<String> rawMilestones = (List<String>) document.get("milestones");
+                    Long currentIdxLong = document.getLong("currentStepIndex");
+                    int currentIdx = (currentIdxLong != null) ? currentIdxLong.intValue() : 0;
+
+                    if (rawMilestones != null && !rawMilestones.isEmpty()) {
+                        milestoneList.clear();
+                        for (int i = 0; i < rawMilestones.size(); i++) {
+                            int status;
+                            if (i < currentIdx) status = Milestone.STATUS_COMPLETED;
+                            else if (i == currentIdx) status = Milestone.STATUS_ACTIVE;
+                            else status = Milestone.STATUS_PENDING;
+                            
+                            milestoneList.add(new Milestone(rawMilestones.get(i), status));
+                        }
+                        milestoneAdapter.notifyDataSetChanged();
+                    }
                 } else {
-                    Log.d(TAG, "No such document");
-                    binding.tvProjectName.setText("No Active Projects");
-                    binding.tvProjectPhase.setText("--");
-                    binding.projectProgressBar.setProgress(0);
+                    binding.tvProjectName.setText("No Active Projects Found");
                 }
             } else {
-                Log.d(TAG, "get failed with ", task.getException());
-                Toast.makeText(this, "Failed to load project data. You may be offline.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Connection Error", Toast.LENGTH_SHORT).show();
             }
         });
     }
