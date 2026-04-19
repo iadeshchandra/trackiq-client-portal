@@ -5,7 +5,6 @@ public class Document {
     private String date;
     private String url;
 
-    // Firestore requires an empty constructor
     public Document() {}
 
     public Document(String title, String date, String url) {
