@@ -33,7 +33,6 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.Docume
         holder.binding.tvDocTitle.setText(document.getTitle());
         holder.binding.tvDocDate.setText(document.getDate());
 
-        // Open the PDF URL in a browser or native viewer when clicked
         holder.binding.getRoot().setOnClickListener(v -> {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse(document.getUrl()));
