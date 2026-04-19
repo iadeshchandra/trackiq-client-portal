@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="16dp"
+    android:clipToPadding="false">
+
+    <View
+        android:id="@+id/lineTop"
+        android:layout_width="2dp"
+        android:layout_height="20dp"
+        android:background="#E2E8F0"
+        app:layout_constraintStart_toStartOf="@+id/indicatorCircle"
+        app:layout_constraintEnd_toEndOf="@+id/indicatorCircle"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/indicatorCircle"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        app:cardCornerRadius="10dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="3dp"
+        app:strokeColor="#CBD5E1"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lineTop" />
+
+    <View
+        android:id="@+id/lineBottom"
+        android:layout_width="2dp"
+        android:layout_height="30dp"
+        android:background="#E2E8F0"
+        app:layout_constraintStart_toStartOf="@+id/indicatorCircle"
+        app:layout_constraintEnd_toEndOf="@+id/indicatorCircle"
+        app:layout_constraintTop_toBottomOf="@id/indicatorCircle"/>
+
+    <TextView
+        android:id="@+id/tvMilestoneTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Phase Step"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_secondary"
+        app:layout_constraintBottom_toBottomOf="@+id/indicatorCircle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/indicatorCircle"
+        app:layout_constraintTop_toTopOf="@+id/indicatorCircle" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
