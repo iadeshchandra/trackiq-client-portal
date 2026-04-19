@@ -15,6 +15,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.trackiq.ClientPortalPro.auth.LoginActivity;
 import com.trackiq.ClientPortalPro.databinding.ActivityDashboardBinding;
+import com.trackiq.ClientPortalPro.invoices.DocumentsActivity;
 
 public class DashboardActivity extends AppCompatActivity {
 
@@ -45,7 +46,7 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         binding.btnViewInvoices.setOnClickListener(v -> {
-            Toast.makeText(this, "Opening Documents...", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(DashboardActivity.this, DocumentsActivity.class));
         });
     }
 
