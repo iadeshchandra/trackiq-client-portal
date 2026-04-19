@@ -21,8 +21,8 @@ public class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;
     private FirebaseAuth mAuth;
     
-    // Set your sovereign admin email here
-    private static final String ADMIN_EMAIL = "admin@sanatanibandhan.com"; 
+    // Change this to your sovereign admin email
+    private static final String ADMIN_EMAIL = "admin@trackiq.com"; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,10 +79,8 @@ public class LoginActivity extends AppCompatActivity {
     private void routeUser(String email) {
         Intent intent;
         if (email != null && email.equalsIgnoreCase(ADMIN_EMAIL)) {
-            // Route the leader to the control center
             intent = new Intent(LoginActivity.this, AdminActivity.class);
         } else {
-            // Route general users to their dashboard
             intent = new Intent(LoginActivity.this, DashboardActivity.class);
         }
         startActivity(intent);
