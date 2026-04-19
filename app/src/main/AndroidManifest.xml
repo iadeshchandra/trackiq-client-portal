@@ -33,6 +33,10 @@
         <activity
             android:name=".invoices.DocumentsActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".admin.AdminActivity"
+            android:exported="false" />
             
     </application>
 </manifest>
