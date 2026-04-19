@@ -34,6 +34,11 @@ public class LoginActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         binding.btnLogin.setOnClickListener(v -> attemptLogin());
+        
+        // NEW: Navigate to Forgot Password screen
+        binding.tvForgotPassword.setOnClickListener(v -> {
+            startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+        });
     }
 
     @Override
@@ -93,11 +98,13 @@ public class LoginActivity extends AppCompatActivity {
             binding.btnLogin.setEnabled(false);
             binding.etEmail.setEnabled(false);
             binding.etPassword.setEnabled(false);
+            binding.tvForgotPassword.setEnabled(false);
         } else {
             binding.progressBar.setVisibility(View.GONE);
             binding.btnLogin.setEnabled(true);
             binding.etEmail.setEnabled(true);
             binding.etPassword.setEnabled(true);
+            binding.tvForgotPassword.setEnabled(true);
         }
     }
 }
