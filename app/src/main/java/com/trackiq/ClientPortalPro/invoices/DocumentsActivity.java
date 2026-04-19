@@ -32,7 +32,6 @@ public class DocumentsActivity extends AppCompatActivity {
         binding = ActivityDocumentsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Setup Toolbar back button
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -55,7 +54,6 @@ public class DocumentsActivity extends AppCompatActivity {
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) return;
 
-        // Querying a sub-collection named "documents" inside the user's project document
         db.collection("projects").document(currentUser.getUid()).collection("documents")
                 .get()
                 .addOnCompleteListener(task -> {
