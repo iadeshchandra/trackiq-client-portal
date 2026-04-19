@@ -73,38 +73,15 @@
                         android:text="Loading Project..."
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/brand_primary"/>
+                        android:textColor="@color/brand_primary"
+                        android:layout_marginBottom="16dp"/>
 
-                    <LinearLayout
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvTimeline"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="12dp"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Current Phase: "
-                            android:textColor="@color/text_secondary"/>
-
-                        <TextView
-                            android:id="@+id/tvProjectPhase"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="--"
-                            android:textColor="@color/brand_accent"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
-
-                    <ProgressBar
-                        android:id="@+id/projectProgressBar"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:progress="0"
-                        android:progressTint="@color/brand_accent"/>
+                        android:nestedScrollingEnabled="false"
+                        android:clipToPadding="false"/>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
